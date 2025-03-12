@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Category</title>
+</head>
+<body>
+    <table border="1">
+        <tr>
+            <td>
+                <form method="post">
+                    {% csrf_token %}
+                    <label>Category:</label>
+                    <input required type="text" name="cname" value="{{cated.category_name}}"><br><br>
+                    <div align="center">
+                        <input type="submit" value="Submit">
+                    </div>
+                </form>
+            </td>
+        </tr>
+    </table>
+    <br>
+    <table border="1">
+        <tr>
+            <td>SL NO</td>
+            <td>Category</td>
+            <td>Action</td>
+        </tr>
+        {% for i in cat %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{i.category_name}}</td>
+            <td><a href="{% url 'Admin:deletecat' i.id %}">Delete</a>
+                <a href="{% url 'Admin:editcat' i.id %}">Edit</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

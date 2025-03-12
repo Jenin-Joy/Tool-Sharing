@@ -1,0 +1,41 @@
+<table border="1">
+    <tr>
+        <td>SL No</td>
+        <td>Tool Name</td>
+        <td>Details</td>
+        <td>Price per Day</td>
+        <td>Username</td>
+        <td>Contact</td>
+        <td>Distance (km)</td>
+        <td>Rating</td>
+        <td>Action</td>
+    </tr>
+    {% for i, j, l, m in tool %}
+    <tr>
+        <td>{{ forloop.counter }}</td>
+        <td>{{ i.tool_name }}</td>
+        <td>{{ i.tool_details }}</td>
+        <td>{{ i.tool_priceperday }}</td>
+        <td>{{ i.user.user_name }}</td>
+        <td>{{ i.user.user_contact }}</td>
+        <td>{% if m is not None %}{{ m|floatformat:2 }}{% else %}N/A{% endif %}</td>
+        <td>
+            {% for k in ar %} 
+                {% if k <= j %} 
+                    <i class="fa-solid fa-star text-warning"></i>
+                {% else %}
+                    <i class="fa-solid fa-star star-light"></i>
+                {% endif %} 
+            {% endfor %}
+        </td>
+        <td>
+            <a href="{% url 'User:Rentdetails' i.id %}">Rent</a>
+            {% if l == 0 %}
+                <a href="{% url 'User:bookmark' i.id 'tool' %}">Add Bookmark</a>
+            {% else %}
+                <a href="{% url 'User:deletebookmark' l 'tool' %}">Delete Bookmark</a>
+            {% endif %}
+        </td>
+    </tr>     
+    {% endfor %}  
+</table>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        .text-warning {
+            color: orange;
+        }
+        .star-light {
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+    <h1>All Tool Details</h1>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    <p>Your Location: Latitude {{ user_location.latitude|floatformat:2 }}, Longitude {{ user_location.longitude|floatformat:2 }}</p>
+    
+    <button id="getLocationBtn">Use My Current Location</button>
+
+    <form method="post">
+        {% csrf_token %}
+        <table border="1">
+            <tr>
+                <td>Category</td>
+            <td><select name="selcategory" id="selcategory" onchange="ajaxProduct(this.value)">
+                <option value="">--SELECT--</option>
+                {% for i in cat %}
+                <option value="{{i.id}}">{{i.category_name}}</option>
+                {% endfor %}
+            </select>
+            </td>
+            </tr>
+        </table>
+    <br>
+    <table border="1" id="result">
+        <tr>
+            <td>SL No</td>
+            <td>Tool Name</td>
+            <td>Details</td>
+            <td>Price per Day</td>
+            <td>Username</td>
+            <td>Contact</td>
+            <td>Distance (km)</td>
+            <td>Rating</td>
+            <td>Action</td>
+        </tr>
+        {% for i, j, l, m in tool %}
+        <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ i.tool_name }}</td>
+            <td>{{ i.tool_details }}</td>
+            <td>{{ i.tool_priceperday }}</td>
+            <td>{{ i.user.user_name }}</td>
+            <td>{{ i.user.user_contact }}</td>
+            <td>{% if m is not None %}{{ m|floatformat:2 }}{% else %}N/A{% endif %}</td>
+            <td>
+                {% for k in ar %} 
+                    {% if k <= j %} 
+                        <i class="fa-solid fa-star text-warning"></i>
+                    {% else %}
+                        <i class="fa-solid fa-star star-light"></i>
+                    {% endif %} 
+                {% endfor %}
+            </td>
+            <td>
+                <a href="{% url 'User:Rentdetails' i.id %}">Rent</a>
+                {% if l == 0 %}
+                    <a href="{% url 'User:bookmark' i.id 'tool' %}">Add Bookmark</a>
+                {% else %}
+                    <a href="{% url 'User:deletebookmark' l 'tool' %}">Delete Bookmark</a>
+                {% endif %}
+            </td>
+        </tr>     
+        {% endfor %}  
+    </table>
+    <a href="{% url 'User:Viewbookmarks' %}">My Bookmarks</a>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <script>
+        document.getElementById('getLocationBtn').addEventListener('click', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        window.location.href = "{% url 'User:Viewtools' %}?lat=" + lat + "&lon=" + lon;
+                    },
+                    function(error) {
+                        alert("Unable to retrieve your location: " + error.message);
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by your browser.");
+            }
+        });
+
+        function ajaxProduct(catid) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+
+                        var ur = "{% url 'User:ajaxsearchtool' %}"
+                        $.ajax({
+                            url: ur,
+                            data: { catid: catid,lat: lat, lon: lon },
+                            success: function (data) {
+                                $("#result").html(data);
+                            }
+                        });
+                        
+                    },
+                    function(error) {
+                        alert("Unable to retrieve your location: " + error.message);
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by your browser.");
+            }
+            
+            };
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Gallery</title>
+    </head>
+<body>
+    <h1>Gallery</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <table border="2">
+            <tr>
+                <td>select File</td>
+                <td><input required type="file" name="btnfile"></td>
+            </tr>
+
+            <tr>
+                <td align="center" colspan="2">
+                 <input type="submit" name="btnsubmit" value="Submit">
+                </td>
+            </tr>
+        </table>
+    </form>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View my tool Bookings</title>
+</head>
+   <h1>View Bookings</h1>
+<body>
+    <form method="post">
+    {% csrf_token %}
+      <table border="1">
+        <tr>
+            <td>SL No</td>
+            <td>Date</td>
+            <td>FromDate</td>
+            <td>ToDate</td>
+            <td>Tool name</td>
+            <td>Total price</td>
+            <td>User</td>
+            <td>Action</td>
+        </tr>
+        {% for i in book %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{i.rent_tool_date}}</td>
+            <td>{{i.rent_tool_fromdate}}</td>
+            <td>{{i.rent_tool_todate}}</td>
+            <td>{{i.tool.tool_name}}</td>
+            <td>{{i.rent_tool_price}}</td>
+            <td>{{i.user.user_name}}</td>
+            <td>{% if i.rent_tool_status == 1 %}
+                Payment Completed | <a href="{% url 'User:chatpage' i.user.id %}">Chat</a>
+                <a href="{% url 'User:returned' i.id %}">ConfirmReturn</a>
+                {% elif i.rent_tool_status == 2 %}
+                Returned
+                {% else %}
+                <!-- <a href="{% url 'User:acceptbooking' i.id %}">Accept</a>
+                <a href="{% url 'User:rejectbooking' i.id %}">Reject</a> -->
+                Pending
+                {% endif %}     
+            </td>
+        </tr>
+        {% endfor %}
+     </table>
+    </form>
+</body>
+</html>

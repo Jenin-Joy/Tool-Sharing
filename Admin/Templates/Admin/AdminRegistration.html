@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>AdminRegistration</title>
+</head>
+<body>
+    <form method="post">
+        {% csrf_token %}
+        <table border="1">
+            <tr>
+               <td>Name:</td>
+               <td><input required type="text" title="Name Allows Only Alphabets,Spaces and First Letter Must Be Capital Letter" pattern="^[A-Z]+[a-zA-Z ]*$" name="admname" value="{{admed.admin_name}}"></td>
+            </tr>   
+
+            <tr>
+               <td>Email:</td>
+               <td><input required type="email" name="admemail" value="{{admed.admin_email}}"></td>
+            </tr>
+
+            <tr>
+                <td>Password:</td>
+                <td><input required type="password" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters"  name="admpassword"></td>
+            </tr>
+
+            <tr>
+                <td align="center" colspan="2">
+                    <input type="submit" name="btnsubmit" value="Register">
+                </td>
+            </tr>  
+        </table>
+        <br>
+        <table border="1">
+        <tr>
+            <td>SL NO</td>
+            <td>Name</td>
+            <td>Email</td>
+            <td>Action</td>
+        </tr>
+        {% for i in adm %}  
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{i.admin_name}}</td>
+            <td>{{i.admin_email}}</td>
+            <td><a href="{% url 'Admin:deleteadmin' i.id %}">Delete</a>
+                <a href="{% url 'Admin:editadmin' i.id %}">Edit</a>
+            </td>
+        </tr>
+        {% endfor %}    
+    </form>
+</body>
+</html>    

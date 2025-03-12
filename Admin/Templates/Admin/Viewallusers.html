@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Users</title>
+</head>
+  <body>
+    <h1>All Users</h1>
+    <form method="post">
+    {% csrf_token %} 
+    <table border="1">
+        <tr>
+            <td>SL No</td>
+            <td>Username</td>
+            <td>Email</td>
+            <td>Contact</td>
+            <td>User latitude</td>
+            <td>User longitude</td>
+            <td>User photo</td>
+            <td>User proof</td>
+            <td>Action</td> 
+        </tr>
+        {% for i in user %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{i.user_name}}</td>
+            <td>{{i.user_email}}</td>
+            <td>{{i.user_contact}}</td>
+            <td>{{i.user_latitude}}</td>
+            <td>{{i.user_longitude}}</td>
+            <td><img src="{{i.user_photo.url}}" width="100" height="100"></td>
+            <td><img src="{{i.user_proof.url}}" width="100" height="100"></td>
+            <td><a href="{% url 'Admin:Viewusertooldetails' i.id %}">View user tools</a>
+                {% if i.user_status == 0 %}
+                <a href="{% url 'Admin:blockuser' i.id 1 %}">Block</a>
+                {% else %}
+                <a href="{% url 'Admin:blockuser' i.id 0 %}">Unblock</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    </form>
+  </body> 
+</html>

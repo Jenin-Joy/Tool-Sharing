@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bookmarks</title>
+</head>
+<body>
+    <h1>My Bookmarks</h1>
+    <form method="post">
+      {% csrf_token %}
+      <table border="1">
+        <tr>
+            <td>SL No</td>
+            <td>Toolname</td>
+            <td>Details</td>
+            <td>Price per day</td>
+            <td>Username</td>
+            <td>Contact</td>
+            <td>Action</td>
+        </tr>
+        {% for i in bmark %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{i.tool.tool_name}}</td>
+            <td>{{i.tool.tool_details}}</td>
+            <td>{{i.tool.tool_priceperday}}</td>
+            <td>{{i.tool.user.user_name}}</td>
+            <td>{{i.tool.user.user_contact}}</td>
+            <td>
+              <a href="{% url 'User:Rentdetails' i.tool.id %}">Rent</a>
+              <a href="{% url 'User:deletebookmark' i.id 'ntool' %}">Delete</a>
+            </td>
+        </tr> 
+        {% endfor %}  
+      </table>
+    </form>
+    <a href="{% url 'User:Viewtools'%}">View all tools</a>
+</body>
+</html>    

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Replied Complaints</title>
+</head>
+  <body>
+    <h1>Replied Complaints</h1>
+    <form method="post">
+    {% csrf_token %} 
+    <table border="1">
+        <tr>
+            <td>SL No</td>
+            <td>Title</td>
+            <td>Content</td>
+            <td>Username</td>
+            <td>Contact</td>
+            <td>Date</td>
+            <td>Reply</td> 
+        </tr>
+    {% for i in repcomp %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{i.comp_title}}</td>
+            <td>{{i.comp_content}}</td>
+            <td>{{i.user.user_name}}</td>
+            <td>{{i.user.user_contact}}</td>
+            <td>{{i.comp_date}}</td>
+            <td>{{i.comp_reply}}</td>
+        </tr>
+    {% endfor %}
+    </form>
+  </body> 
+</html>

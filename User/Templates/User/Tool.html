@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tool</title>
+</head>
+<body>
+    <form method="post">
+      {% csrf_token %}
+      <table border="1">
+        <tr>
+            <td>Toolname </td>
+            <td><input required type="text" name="txttoolname" pattern="^[A-Za-z\s]+$" value="{{tooled.tool_name}}"></td>
+        </tr>
+
+        <tr>
+            <td>Details</td>
+            <td><input required type="text" name="txtdetails" pattern="^[A-Za-z\s]+$" value="{{tooled.tool_details}}"></td>
+        </tr>
+
+        <tr>
+            <td>Price per day</td>
+            <td><input required type="text" name="txtprice" minlength="2" maxlength="4" pattern="^[1-9][0-9]*$" value="{{tooled.tool_priceperday}}"></td>
+        </tr>
+
+        <tr>
+            <td>Quantity</td>
+            <td><input required type="text" name="txtquantity" minlength="1" maxlength="2" pattern="^[1-9][0-9]*$" value="{{tooled.tool_quantity}}"></td>
+        </tr>
+
+        <tr>
+            <td>Category</td>
+            <td><select name="sel category" id="" required>
+                <option value="">--SELECT--</option>
+                {% for i in cat %}
+                <option value="{{i.id}}">{{i.category_name}}</option>
+                {% endfor %}
+            </select>
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2" align="center">
+                <input type="submit" name="btnsubmit" value="Submit">
+            </td>
+        </tr>
+      </table>
+      <br>
+      <table border="1">
+        <tr>
+            <td>SL No</td>
+            <td>Toolname</td>
+            <td>Details</td>
+            <td>Price per day</td>
+            <td>Quantity</td>
+            <td>Category</td>
+            <td>Action</td>
+        </tr>
+        {% for i in tool %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{i.tool_name}}</td>
+            <td>{{i.tool_details}}</td>
+            <td>{{i.tool_priceperday}}</td>
+            <td>{{i.qty}}</td>
+            <td>{{i.category.category_name}}</td>
+            <td><a href="{% url 'User:deletetool' i.id %}">Delete</a>
+                <a href="{% url 'User:edittool' i.id %}">Edit</a>
+                <a href="{% url 'User:Gallery' i.id %}">Gallery</a>
+            </td>   
+        </tr>
+        {% endfor %}    
+    </form>
+</body>
+</html>
+
+

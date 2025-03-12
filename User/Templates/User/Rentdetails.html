@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rent Details</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <style>
+        .error-message {
+            color: red;
+            display: none;
+            font-size: 0.9em;
+        }
+        .availability-message {
+            color: green;
+            display: none;
+            font-size: 0.9em;
+        }
+        table {
+            width: 50%;
+            margin: 20px auto;
+        }
+        td {
+            padding: 10px;
+        }
+        .disabled-input {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rent Details</h1>
+    {% if error %}
+        <p style="color: red; text-align: center;">{{ error }}</p>
+    {% endif %}
+    <form method="post" id="rentForm">
+        {% csrf_token %}
+        <table border="1">
+            <tr>
+                <td>From Date</td>
+                <td>
+                    <input type="text" name="from_date" id="from_date" 
+                           placeholder="Select From Date">
+                    <span id="from_error" class="error-message">Invalid date selection</span>
+                </td>
+            </tr>
+            <tr>
+                <td>To Date</td>
+                <td>
+                    <input type="text" name="to_date" id="to_date" 
+                           placeholder="Select To Date" class="disabled-input" disabled>
+                    <span id="to_error" class="error-message">Invalid date selection</span>
+                </td>
+            </tr>
+            <tr>
+                <td>Quantity (Max: {{ total_qty }})</td>
+                <td>
+                    <input type="number" name="txtquantity" id="txtquantity" 
+                           min="1" max="{{ total_qty }}" value="1">
+                    <span id="qty_error" class="error-message"></span>
+                    <span id="qty_available" class="availability-message"></span>
+                </td>
+            </tr>
+            <tr>
+                <td>Amount</td>
+                <td>
+                    <input type="text" name="txtamount" id="txtamount" readonly>
+                    <input type="hidden" name="txtamountperday" value="{{ amount }}" id="txtamountperday">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" align="center">
+                    <input type="submit" name="btnsubmit" value="Submit" id="submitBtn" disabled>
+                </td>
+            </tr>
+        </table>
+    </form>
+
+    {{ booked_ranges|json_script:"booked-ranges" }}
+
+    <script>
+        const bookedRanges = JSON.parse(document.getElementById("booked-ranges").textContent);
+        const totalQty = {{ total_qty|default:1 }};
+
+        // Calculate booked quantity for a specific date
+        function getBookedQtyForDate(date) {
+            const checkDate = new Date(date);
+            let bookedQty = 0;
+            bookedRanges.forEach(range => {
+                const fromDate = new Date(range.from);
+                const toDate = new Date(range.to);
+                if (checkDate >= fromDate && checkDate <= toDate) {
+                    bookedQty += parseInt(range.qty);
+                }
+            });
+            return bookedQty;
+        }
+
+        // Generate array of fully booked dates (where available qty = 0)
+        function getFullyBookedDates() {
+            const fullyBookedDates = [];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Normalize to start of day
+            const endDate = new Date(today);
+            endDate.setFullYear(today.getFullYear() + 1); // Check 1 year ahead
+
+            // First, mark all dates within booked ranges where qty exceeds totalQty
+            bookedRanges.forEach(range => {
+                const fromDate = new Date(range.from);
+                const toDate = new Date(range.to);
+                let currentDate = new Date(fromDate);
+                while (currentDate <= toDate) {
+                    const bookedQty = getBookedQtyForDate(currentDate);
+                    if (bookedQty >= totalQty) {
+                        const dateStr = currentDate.toISOString().split('T')[0];
+                        if (!fullyBookedDates.includes(dateStr)) {
+                            fullyBookedDates.push(dateStr);
+                        }
+                    }
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+            });
+
+            return fullyBookedDates;
+        }
+
+        const fullyBookedDates = getFullyBookedDates();
+
+        // Initialize Flatpickr for From Date
+        const fromPicker = flatpickr("#from_date", {
+            minDate: "today",
+            dateFormat: "Y-m-d",
+            disable: fullyBookedDates,
+            onChange: function(selectedDates, dateStr) {
+                const toDateInput = document.getElementById("to_date");
+                if (dateStr) {
+                    toDateInput.disabled = false;
+                    toDateInput.classList.remove("disabled-input");
+                    toPicker.set("minDate", dateStr);
+                    toPicker.set("disable", fullyBookedDates.filter(d => new Date(d) >= new Date(dateStr)));
+                    validateDates();
+                    getAmount();
+                } else {
+                    toDateInput.disabled = true;
+                    toDateInput.classList.add("disabled-input");
+                    toPicker.clear();
+                }
+            }
+        });
+
+        // Initialize Flatpickr for To Date
+        const toPicker = flatpickr("#to_date", {
+            minDate: "today",
+            dateFormat: "Y-m-d",
+            disable: fullyBookedDates,
+            onChange: function(selectedDates, dateStr) {
+                validateDates();
+                getAmount();
+            }
+        });
+
+        // Validate dates and adjust quantity
+        function validateDates() {
+            const fromDate = document.getElementById("from_date").value;
+            const toDate = document.getElementById("to_date").value;
+            const qtyInput = document.getElementById("txtquantity");
+            const qtyRequested = parseInt(qtyInput.value);
+            const fromError = document.getElementById("from_error");
+            const toError = document.getElementById("to_error");
+            const qtyError = document.getElementById("qty_error");
+            const qtyAvailableMsg = document.getElementById("qty_available");
+            const submitBtn = document.getElementById("submitBtn");
+
+            let isValid = true;
+            let minAvailableQty = totalQty;
+
+            // Reset messages
+            fromError.style.display = "none";
+            toError.style.display = "none";
+            qtyError.style.display = "none";
+            qtyAvailableMsg.style.display = "none";
+            submitBtn.disabled = true;
+
+            if (fromDate && toDate) {
+                const start = new Date(fromDate);
+                const end = new Date(toDate);
+
+                if (start > end) {
+                    toError.textContent = "To date must be after From date";
+                    toError.style.display = "block";
+                    isValid = false;
+                } else {
+                    let currentDate = new Date(start);
+                    while (currentDate <= end) {
+                        const bookedQty = getBookedQtyForDate(currentDate);
+                        const availableQty = totalQty - bookedQty;
+                        minAvailableQty = Math.min(minAvailableQty, availableQty);
+                        if (availableQty === 0) {
+                            qtyError.textContent = "No units available for selected dates";
+                            qtyError.style.display = "block";
+                            isValid = false;
+                            break;
+                        }
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+
+                    qtyInput.max = minAvailableQty;
+                    if (qtyRequested > minAvailableQty) {
+                        qtyInput.value = minAvailableQty;
+                    }
+                    qtyAvailableMsg.textContent = `Available: ${minAvailableQty} units`;
+                    qtyAvailableMsg.style.display = "block";
+                }
+            }
+
+            submitBtn.disabled = !isValid || minAvailableQty === 0;
+            return isValid && minAvailableQty > 0;
+        }
+
+        // Calculate total amount
+        function getAmount() {
+            if (!validateDates()) {
+                document.getElementById("txtamount").value = "";
+                return;
+            }
+
+            const amountPerDay = parseFloat(document.getElementById("txtamountperday").value);
+            const fromDate = document.getElementById("from_date").value;
+            const toDate = document.getElementById("to_date").value;
+            const qty = parseInt(document.getElementById("txtquantity").value);
+
+            if (fromDate && toDate) {
+                const startDate = new Date(fromDate);
+                const endDate = new Date(toDate);
+                const diffInDays = Math.max((endDate - startDate) / (1000 * 3600 * 24) + 1, 1);
+
+                const total = diffInDays * amountPerDay * qty;
+                document.getElementById("txtamount").value = total.toFixed(2);
+            }
+        }
+
+        // Trigger validation on quantity change
+        document.getElementById("txtquantity").addEventListener("change", function() {
+            const qtyInput = document.getElementById("txtquantity");
+            const minAvailableQty = parseInt(qtyInput.max);
+            if (parseInt(qtyInput.value) > minAvailableQty) {
+                qtyInput.value = minAvailableQty;
+            }
+            validateDates();
+            getAmount();
+        });
+    </script>
+</body>
+</html> 

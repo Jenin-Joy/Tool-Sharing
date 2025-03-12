@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Tags</title>
+</head>
+<body>
+    <form method="post">
+    {% csrf_token %}
+      <table border="1">  
+        <tr>
+            <td>Category:</td>
+            <td><select name="sel_category" id="">
+                <option value="">--SELECT--</option>
+                {% for i in cat %}
+                <option 
+                {% if taged.category_id == i.id %}
+                selected
+                {% endif %}
+                 value={{i.id}}>{{i.category_name}}</option>
+                {% endfor %}
+            </select></td>
+        </tr>
+         <tr>
+            <td>Tag:</td>
+            <td><input type="text" name="tagname" value="{{taged.tag_name}}"></td>
+        </tr>
+        <tr>
+            <td colspan="2" align="center">
+            <input type="submit" name="btnsubmit" value="Submit">
+            </td>
+        </tr>
+      </table>
+      <br>
+      <table border="1">
+        <tr>
+            <td>SL NO</td>
+            <td>Category</td>
+            <td>Tag</td>
+            <td>Action</td>
+        </tr>
+        {% for i in tag %}
+        <tr>
+            <td>{{forloop.counter}}</td>
+            <td>{{i.category.category_name}}</td>
+            <td>{{i.tag_name}}</td>
+            <td><a href="{% url 'Admin:deletetag' i.id %}">Delete</a>
+                <a href="{% url 'Admin:edittag' i.id %}">Edit</a>
+            </td>
+        </tr>
+        {% endfor %}
+      </table>    
+    </form>
+</body>
+</html>

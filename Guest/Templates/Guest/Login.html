@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+    <body>
+        <h1>Login</h1>
+        <form method="post">
+        {% csrf_token %}    
+        <table border="3">
+            <tr>
+                <td>Email</td>
+                <td><input required type="email" name="txtemail" placeholder="enter email"></td>
+            </tr>
+            
+            <tr>
+                <td>Password</td>
+               <td><input required type="password"  name="txtpassword"></td>
+            </tr>
+            
+            <tr>
+                <td colspan="2" align="center"><input type="submit" name="btnlogin" value="Login"></td>
+            </tr>
+        </table>
+        </form>
+    </body>
+</html>  
+{% if msg %}
+<script>
+    alert("{{msg}}")
+</script>
+{% endif %}
