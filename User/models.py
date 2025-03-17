@@ -54,3 +54,10 @@ class tbl_chat(models.Model):
   chat_file = models.FileField(upload_to='ChatFiles/')
   user_from = models.ForeignKey(tbl_user,on_delete=models.CASCADE,related_name="user_from")
   user_to = models.ForeignKey(tbl_user,on_delete=models.CASCADE,related_name="user_to")
+
+class tbl_payment(models.Model):
+  payment_amount=models.CharField(max_length=50)
+  user=models.ForeignKey(tbl_user,on_delete=models.CASCADE)
+  request = models.ForeignKey(tbl_renttool, on_delete=models.CASCADE)
+  payment_date=models.DateField(null=True)
+  payment_status=models.IntegerField(default=0)

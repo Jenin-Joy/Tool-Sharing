@@ -32,6 +32,10 @@
                 <a href="{% url 'User:returned' i.id %}">ConfirmReturn</a>
                 {% elif i.rent_tool_status == 2 %}
                 Returned
+                {% elif i.rent_tool_status == 3 %}
+                Booking Cancelled
+                {% elif i.rent_tool_status == 4 %}
+                Full Payment Completed
                 {% else %}
                 <!-- <a href="{% url 'User:acceptbooking' i.id %}">Accept</a>
                 <a href="{% url 'User:rejectbooking' i.id %}">Reject</a> -->

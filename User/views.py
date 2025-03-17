@@ -2,7 +2,7 @@ from django.shortcuts import render,redirect
 from User.models import *
 from Guest.models import *
 from Admin.models import *
-from datetime import datetime
+from datetime import datetime, date
 from django.http import JsonResponse
 from django.db.models import Q
 from django.db.models import Avg
@@ -289,18 +289,14 @@ def Viewtools(request):
 
 
 def Rentdetails(request, tid):
-    # Get tool and user data
     data = tbl_tool.objects.get(id=tid)
     userid = tbl_user.objects.get(id=request.session['uid'])
-    amount = float(data.tool_priceperday)  # Convert price to float for calculation
-    
-    total_qty = data.qty  # Total available quantity of the tool
-    # Fetch existing bookings for the tool
+    amount = float(data.tool_priceperday)
+    total_qty = data.qty
     bookings = tbl_renttool.objects.filter(
         tool=data,
-        rent_tool_status__in=[0, 1]  # 0: pending, 1: active (adjust statuses as needed)
+        rent_tool_status__in=[0, 1]
     ).values('rent_tool_fromdate', 'rent_tool_todate', 'rent_tool_qty')
-    
     booked_ranges = [
         {
             'from': booking['rent_tool_fromdate'].isoformat(),
@@ -308,53 +304,40 @@ def Rentdetails(request, tid):
             'qty': booking['rent_tool_qty']
         } for booking in bookings
     ]
-    
     if request.method == 'POST':
         try:
             fromdate_str = request.POST.get('from_date')
             todate_str = request.POST.get('to_date')
             qty_requested = int(request.POST.get('txtquantity', 1))
-            
-            # Validate quantity
             if qty_requested <= 0:
                 raise ValueError("Quantity must be greater than 0")
             if qty_requested > total_qty:
                 raise ValueError(f"Requested quantity ({qty_requested}) exceeds total available ({total_qty})")
-            
-            # Convert dates
             fromdate = datetime.strptime(fromdate_str, '%Y-%m-%d')
             todate = datetime.strptime(todate_str, '%Y-%m-%d')
-            
-            # Validate date range
             if todate < fromdate:
                 raise ValueError("End date must be after start date")
-            
-            # Calculate overlapping bookings for the requested date range
             overlapping_bookings = tbl_renttool.objects.filter(
                 tool=data,
                 rent_tool_status__in=[0, 1],
-                rent_tool_fromdate__lte=todate,  # Starts before requested end date
-                rent_tool_todate__gte=fromdate   # Ends after requested start date
+                rent_tool_fromdate__lte=todate,
+                rent_tool_todate__gte=fromdate
             ).aggregate(total_booked=Sum('rent_tool_qty'))['total_booked'] or 0
-            
-            # Calculate available quantity
             available_qty = total_qty - overlapping_bookings
-            
             if available_qty >= qty_requested:
-                # Calculate total price
-                diff = (todate - fromdate).days + 1  # Include both start and end dates
-                days = max(diff, 1)  # Minimum 1 day
+                diff = (todate - fromdate).days + 1
+                days = max(diff, 1)
                 total = amount * days * qty_requested
-                
-                # Create rental record
+                pay_amt = total / 2
                 rentT = tbl_renttool.objects.create(
                     rent_tool_fromdate=fromdate,
                     rent_tool_todate=todate,
                     user=userid,
                     tool=data,
-                    rent_tool_price=str(total),  # Convert to string as per model
+                    rent_tool_price=str(pay_amt),
                     rent_tool_qty=qty_requested
                 )
+                tbl_payment.objects.create(payment_amount=pay_amt,request=tbl_renttool.objects.get(id=rentT.id),user=tbl_user.objects.get(id=request.session["uid"]))
                 return redirect('User:Payment',rentT.id)
             else:
                 return render(request, "User/Rentdetails.html", {
@@ -362,7 +345,7 @@ def Rentdetails(request, tid):
                     "booked_ranges": booked_ranges,
                     "tool_id": tid,
                     "total_qty": total_qty,
-                    "available_qty": available_qty,  # Pass available qty to template
+                    "available_qty": available_qty, 
                     "error": f"Only {available_qty} units available for the selected dates"
                 })
                 
@@ -374,8 +357,6 @@ def Rentdetails(request, tid):
                 "total_qty": total_qty,
                 "error": str(e)
             })
-    
-    # For GET request, calculate current availability
     overlapping_bookings = tbl_renttool.objects.filter(
         tool=data,
         rent_tool_status__in=[0, 1]
@@ -387,10 +368,29 @@ def Rentdetails(request, tid):
         "booked_ranges": booked_ranges,
         "tool_id": tid,
         "total_qty": total_qty,
-        "available_qty": available_qty  # Show current availability
+        "available_qty": available_qty
     })
 
 # def reqrent(request,tid):
+
+def cancelbooking(request, id):
+    rent = tbl_renttool.objects.get(id=id)
+    rent.rent_tool_status=3
+    rent.save()
+    return redirect('User:Mybooking')
+
+def secondpayment(request, id):
+    payment = tbl_payment.objects.get(request=id,user=request.session["uid"],payment_status=0)
+    amount = payment.payment_amount
+    if request.method == 'POST':
+        payment.payment_status = 1
+        payment.payment_date = date.today()
+        payment.save()
+        rent = tbl_renttool.objects.get(id=id)
+        rent.rent_tool_status=4
+        rent.save()
+        return redirect("User:Loader")
+    return render(request, "User/Payment.html",{"total":amount})
 
 def bookmark(request,tid,key):
     data=tbl_tool.objects.get(id=tid)

@@ -28,9 +28,14 @@
             <td>{{i.rent_tool_price}}</td>
             <td>{{i.tool.user.user_name}}</td>
             <td>{% if i.rent_tool_status == 1 %}
-                Payment Completed||<a href="{% url 'User:rating' i.tool.id%}">Rating</a> | <a href="{% url 'User:chatpage' i.tool.user.id %}">Chat</a>
+                First Payment Completed||<a href="{% url 'User:rating' i.tool.id%}">Rating</a> | <a href="{% url 'User:chatpage' i.tool.user.id %}">Chat</a>
+                | <a href="{% url 'User:cancelbooking' i.id %}">Cancel Booking</a>
                 {% elif i.rent_tool_status == 2 %}
-                Returned
+                Returned | <a href="{% url 'User:secondpayment' i.id %}">Second Payment</a>
+                {% elif i.rent_tool_status == 3 %}
+                Booking Cancelled
+                {% elif i.rent_tool_status == 4 %}
+                Full Payment Completed
                 {% else %}
                 Pending
                 {% endif %}

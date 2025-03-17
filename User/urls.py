@@ -41,5 +41,7 @@ urlpatterns=[
         path('clearchat/',views.clearchat,name="clearchat"),
 
         path('ajaxsearchtool/',views.ajaxsearchtool,name="ajaxsearchtool"),
+        path('cancelbooking/<int:id>',views.cancelbooking,name="cancelbooking"),
+        path('secondpayment/<int:id>',views.secondpayment,name="secondpayment"),
 
 ]
